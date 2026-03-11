@@ -1,0 +1,33 @@
+# Phase 1 + Phase 2
+fastapi>=0.109.0
+uvicorn[standard]>=0.27.0
+python-multipart>=0.0.6
+pydantic>=2.0
+pydantic-settings>=2.0
+
+# LangChain / OpenAI / LangGraph
+langchain-core>=0.2.0
+langchain-openai>=0.1.0
+langchain-text-splitters>=0.2.0
+langgraph>=0.2.0
+
+# Document processing (Phase 2)
+pypdf>=4.0.0,<6
+python-docx>=1.0.0
+openpyxl>=3.1.0
+xlrd>=2.0.0
+tiktoken>=0.5.0
+watchdog>=4.0.0
+
+# Supabase: direct Postgres connection (use connection URI from Supabase Dashboard -> Settings -> Database)
+sqlalchemy>=2.0.0
+psycopg2-binary>=2.9.0
+
+# Env
+python-dotenv>=1.0.0
+
+# Tracing (optional)
+langsmith>=0.1.0
+
+# SSE
+sse-starlette>=2.0.0

@@ -1,0 +1,29 @@
+---
+description: Enforce phased development workflow -- only work on the phase the user explicitly requests
+alwaysApply: true
+---
+
+# Phased Development Workflow
+
+This project follows a strict 4-phase build plan. **Never** work on a phase unless the user explicitly tells you which phase to execute.
+
+## Phases
+
+- **Phase 1:** Simple chatbot + Supabase chat storage + Docker + React frontend + LangSmith tracing
+- **Phase 2:** Document upload + basic vector retrieval (pgvector) + file management UI
+- **Phase 3:** Advanced hybrid retrieval (dense + sparse search, RRF, parent-child chunking, multi-query expansion)
+- **Phase 4:** Intelligent agent (query analysis, document grading, query rewriting, hallucination check, source references)
+
+## Rules
+
+1. **Wait for explicit instruction.** Do not start any phase until the user says something like "start phase 1", "do phase 2", etc.
+2. **One phase at a time.** Only implement the phase the user requested. Do not add code, features, or schema from a later phase.
+3. **Do not skip ahead.** If the user asks for Phase 3, confirm that Phases 1 and 2 are complete first. If not, warn them.
+4. **Phase plan file:** Refer to the plan at `.cursor/plans/phased_rag_agent_*.plan.md` for detailed scope of each phase. Read the **Documentation Strategy** section near the top of the plan BEFORE starting any phase.
+5. **Mark todos.** Update the plan's todo statuses as you complete tasks within the current phase.
+6. **Documentation is mandatory.** A phase is NOT complete until ALL its docs are written:
+   - Every phase must produce `docs/phase-X-setup.md` (step-by-step setup guide).
+   - Phase 2 must also produce `docs/concepts/embeddings-and-indexes.md`.
+   - Phase 3 must also produce `docs/concepts/hybrid-search.md`, `docs/concepts/chunking-strategies.md`, `docs/concepts/multi-query-retrieval.md`.
+   - Phase 4 must also produce `docs/concepts/document-grading.md`.
+   - See the plan's "Documentation Strategy" and "Concept Docs Detail" sections for full outlines.
