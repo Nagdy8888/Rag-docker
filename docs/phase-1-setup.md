@@ -40,7 +40,7 @@ This guide walks you through getting the Phase 1 chatbot running: Supabase for c
 
 1. In Supabase, open **SQL Editor**.
 2. Click **New query**.
-3. Open the file `supabase_setup.sql` from this project and copy its full contents into the editor.
+3. Open the file `sql/supabase_setup.sql` from this project and copy its full contents into the editor.
 4. Click **Run** (or press Ctrl+Enter).  
    You should see “Success. No rows returned.”  
    This creates:
@@ -123,10 +123,10 @@ docker compose up --build
 |-------|----------------|
 | **Frontend shows “Request failed” or CORS** | Ensure you use the app via [http://localhost:3000](http://localhost:3000) so `/api` is proxied to the backend. Do not call the backend on port 8000 from the browser if the frontend is on another origin without CORS configured. |
 | **Backend: “Invalid API key” or 401** | Check `OPENAI_API_KEY` in `.env` and that the key is valid and has credits. |
-| **Backend: Supabase connection / 500** | Verify `DATABASE_URI` in `.env`. Use the URI from **Settings → Database → Connection string (URI)**. Ensure `?sslmode=require` is at the end. Ensure the SQL from `supabase_setup.sql` was run successfully. |
+| **Backend: Supabase connection / 500** | Verify `DATABASE_URI` in `.env`. Use the URI from **Settings → Database → Connection string (URI)**. Ensure `?sslmode=require` is at the end. Ensure the SQL from `sql/supabase_setup.sql` was run successfully. |
 | **No messages or sessions** | In Supabase **Table Editor**, confirm `chat_sessions` and `chat_messages` exist and that inserts appear when you send messages. |
 | **Streaming stops mid-reply** | Check backend logs (`docker compose logs backend`) for errors. Ensure no proxy or firewall is closing long-lived SSE connections. |
-| **Trigger error when running SQL** | In Postgres 11+, use `EXECUTE FUNCTION` in the trigger (as in `supabase_setup.sql`). If your Supabase Postgres is older, replace with `EXECUTE PROCEDURE`. |
+| **Trigger error when running SQL** | In Postgres 11+, use `EXECUTE FUNCTION` in the trigger (as in `sql/supabase_setup.sql`). If your Supabase Postgres is older, replace with `EXECUTE PROCEDURE`. |
 
 ---
 
