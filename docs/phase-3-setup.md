@@ -6,7 +6,7 @@ This guide upgrades RAG from basic vector search to **hybrid retrieval**: dense 
 
 ## Prerequisites
 
-- **Phase 2** must be complete: pgvector, `files`, `documents`, folder watcher, and agent running. You should have run `supabase_phase2.sql` and optionally `supabase_phase2_add_error_message.sql`.
+- **Phase 2** must be complete: pgvector, `files`, `documents`, folder watcher, and agent running. You should have run `sql/supabase_phase2.sql` and optionally `sql/supabase_phase2_add_error_message.sql`.
 - The same Supabase project and OpenAI key are used.
 
 ---
@@ -14,7 +14,7 @@ This guide upgrades RAG from basic vector search to **hybrid retrieval**: dense 
 ## Step 1: Run the Phase 3 SQL migration
 
 1. In Supabase, open **SQL Editor** → **New query**.
-2. Open **`supabase_phase3.sql`** from this project and copy its full contents into the editor.
+2. Open **`sql/supabase_phase3.sql`** from this project and copy its full contents into the editor.
 3. Click **Run** (or Ctrl+Enter). You should see “Success. No rows returned.”
 
 This migration:
@@ -85,7 +85,7 @@ New files dropped into `documents/` are automatically processed with parent-chil
 
 | Issue | What to check |
 |-------|----------------|
-| **“function hybrid_search does not exist”** | Run `supabase_phase3.sql` in the Supabase SQL Editor. Restart the backend. |
+| **“function hybrid_search does not exist”** | Run `sql/supabase_phase3.sql` in the Supabase SQL Editor. Restart the backend. |
 | **“relation parent_chunks does not exist”** | Same: run the Phase 3 migration. Re-processing will then create parent rows. |
 | **Sparse search returns no results** | Sparse uses English `plainto_tsquery`. Very short or non-English queries may match little; dense search still runs. |
 | **Query expansion is slow** | One extra LLM call per user message. To disable, call `retrieve(..., use_multi_query=False)` or add a config flag. |
