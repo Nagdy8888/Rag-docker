@@ -104,6 +104,27 @@ Create a chat, upload documents from the **Documents** page, then ask questions 
 
 ---
 
+## Storing large documents (Git LFS)
+
+If you plan to keep many large PDFs (or other binaries) in the repo long-term — for example in `documents/` or a dedicated folder — use **Git LFS** so the repo stays small and clones stay fast.
+
+1. **Install Git LFS:** [git-lfs.com](https://git-lfs.com) — then run once on your machine:
+   ```bash
+   git lfs install
+   ```
+
+2. **This repo is already configured:** `.gitattributes` tracks `*.pdf`, `*.docx`, `*.xlsx`, and `*.xls` with LFS. New adds of these types will use LFS automatically.
+
+3. **If you already committed large PDFs before LFS:** migrate them into LFS and rewrite history (do this only if the repo is shared and others are aware):
+   ```bash
+   git lfs migrate import --include="*.pdf" --everything
+   ```
+   Then force-push: `git push --force` (coordinate with anyone else who has cloned the repo).
+
+After that, any `git add` of matching files will store them in LFS; on clone/pull, Git LFS will download the real files.
+
+---
+
 ## Documentation
 
 - **Setup (step-by-step):**
