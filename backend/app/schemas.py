@@ -29,6 +29,14 @@ class ChatMessageCreate(BaseModel):
     content: str = Field(..., min_length=1)
 
 
+class SourceRefResponse(BaseModel):
+    """A source reference (Phase 4): filename, chunk index, snippet."""
+
+    filename: str = ""
+    chunk_index: int | None = None
+    snippet: str | None = None
+
+
 class ChatMessageResponse(BaseModel):
     """A single chat message."""
 
@@ -37,6 +45,7 @@ class ChatMessageResponse(BaseModel):
     role: str  # "user" | "assistant"
     content: str
     created_at: datetime
+    sources: list[SourceRefResponse] = []  # Phase 4: document refs used for this message
 
 
 class ChatSessionWithMessages(ChatSessionResponse):

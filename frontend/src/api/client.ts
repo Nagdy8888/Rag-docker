@@ -1,4 +1,4 @@
-import type { ChatSession, ChatMessage, SSEMessageEvent, DocumentFile } from '../types'
+import type { ChatSession, ChatMessage, SSEMessageEvent, DocumentFile, SourceRef } from '../types'
 
 const API_BASE = '/api'
 
@@ -90,6 +90,7 @@ export type StreamCallbacks = {
   onStatus: (status: string) => void
   onToken: (token: string) => void
   onDone: () => void
+  onSources?: (sources: SourceRef[]) => void
   onError: (err: Error) => void
 }
 
@@ -128,7 +129,14 @@ export async function streamChat(
             const data: SSEMessageEvent = JSON.parse(line.slice(6))
             if (data.type === 'status') callbacks.onStatus(data.content)
             else if (data.type === 'token') callbacks.onToken(data.content)
-            else if (data.type === 'done') callbacks.onDone()
+            else if (data.type === 'sources') {
+              try {
+                const sources: SourceRef[] = JSON.parse(data.content || '[]')
+                callbacks.onSources?.(sources)
+              } catch {
+                callbacks.onSources?.([])
+              }
+            } else if (data.type === 'done') callbacks.onDone()
           } catch {
             // skip invalid JSON
           }

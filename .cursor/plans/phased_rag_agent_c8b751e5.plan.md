@@ -46,13 +46,13 @@ todos:
     status: pending
   - id: p4-agent
     content: "Phase 4: Rewrite agent.py with 7 nodes (analyze, expand, retrieve, grade, rewrite, generate, hallucination check)"
-    status: pending
+    status: completed
   - id: p4-frontend-docs
     content: "Phase 4: Update frontend (source references), update SQL (sources column), write docs/phase-4-setup.md"
-    status: pending
+    status: completed
   - id: p4-concepts
     content: "Phase 4: Write docs/concepts/document-grading.md (deep-dive on grading, query rewriting, hallucination checking)"
-    status: pending
+    status: completed
 isProject: false
 ---
 

@@ -63,12 +63,18 @@ def _session_from_row(row: dict) -> ChatSessionResponse:
 
 
 def _message_from_row(row: dict) -> ChatMessageResponse:
+    sources = row.get("sources")
+    if sources is None:
+        sources = []
+    if not isinstance(sources, list):
+        sources = []
     return ChatMessageResponse(
         id=row["id"],
         session_id=row["session_id"],
         role=row["role"],
         content=row["content"] or "",
         created_at=row["created_at"],
+        sources=[{"filename": s.get("filename", ""), "chunk_index": s.get("chunk_index"), "snippet": s.get("snippet")} for s in sources],
     )
 
 
@@ -322,6 +328,7 @@ def chat_stream(body: ChatSendBody = Body(...)):
 
     async def event_generator():
         full_reply = []
+        sources = []
         try:
             async for event_type, event_content in stream_chat_response(history):
                 yield {
@@ -330,10 +337,15 @@ def chat_stream(body: ChatSendBody = Body(...)):
                 }
                 if event_type == "token":
                     full_reply.append(event_content)
+                if event_type == "sources" and event_content:
+                    try:
+                        sources = json.loads(event_content)
+                    except Exception:
+                        sources = []
         finally:
             reply_text = "".join(full_reply)
-            # Save assistant message
-            insert_message(session_id, "assistant", reply_text)
+            # Save assistant message (Phase 4: include sources if available)
+            insert_message(session_id, "assistant", reply_text, sources=sources if sources else None)
             # Session updated_at is set by DB trigger on message insert
             # Background: generate title for new sessions
             if is_new_session and reply_text:

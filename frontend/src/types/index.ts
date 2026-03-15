@@ -5,15 +5,22 @@ export interface ChatSession {
   updated_at: string
 }
 
+export interface SourceRef {
+  filename: string
+  chunk_index?: number
+  snippet?: string
+}
+
 export interface ChatMessage {
   id: string
   session_id: string
   role: 'user' | 'assistant'
   content: string
   created_at: string
+  sources?: SourceRef[]
 }
 
-export type SSEEventType = 'status' | 'token' | 'done'
+export type SSEEventType = 'status' | 'token' | 'done' | 'sources'
 
 export interface SSEMessageEvent {
   type: SSEEventType

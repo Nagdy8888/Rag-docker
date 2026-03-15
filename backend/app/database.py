@@ -69,16 +69,29 @@ def get_session(session_id: UUID):
 
 
 def get_messages(session_id: UUID):
-    """Return all chat_messages for a session ordered by created_at."""
+    """Return all chat_messages for a session ordered by created_at (includes sources if Phase 4 column exists)."""
     with get_connection() as conn:
-        r = conn.execute(
-            text(
-                "SELECT id, session_id, role, content, created_at FROM chat_messages "
-                "WHERE session_id = :session_id ORDER BY created_at"
-            ),
-            {"session_id": str(session_id)},
-        )
-        return [_row_to_dict(row) for row in r]
+        try:
+            r = conn.execute(
+                text(
+                    "SELECT id, session_id, role, content, created_at, sources FROM chat_messages "
+                    "WHERE session_id = :session_id ORDER BY created_at"
+                ),
+                {"session_id": str(session_id)},
+            )
+        except Exception:
+            r = conn.execute(
+                text(
+                    "SELECT id, session_id, role, content, created_at FROM chat_messages "
+                    "WHERE session_id = :session_id ORDER BY created_at"
+                ),
+                {"session_id": str(session_id)},
+            )
+        rows = [_row_to_dict(row) for row in r]
+        for row in rows:
+            if "sources" not in row:
+                row["sources"] = []
+        return rows
 
 
 def create_session(title: str = "New Chat"):
@@ -102,9 +115,27 @@ def delete_session(session_id: UUID):
         conn.execute(text("DELETE FROM chat_sessions WHERE id = :id"), {"id": str(session_id)})
 
 
-def insert_message(session_id: UUID, role: str, content: str):
-    """Insert a chat_message. Trigger will update session.updated_at."""
+def insert_message(session_id: UUID, role: str, content: str, sources: list | None = None):
+    """Insert a chat_message. Trigger will update session.updated_at. sources: optional Phase 4 jsonb."""
+    import json
     with get_connection() as conn:
+        if sources is not None:
+            try:
+                conn.execute(
+                    text(
+                        "INSERT INTO chat_messages (session_id, role, content, sources) "
+                        "VALUES (:session_id, :role, :content, CAST(:sources AS jsonb))"
+                    ),
+                    {
+                        "session_id": str(session_id),
+                        "role": role,
+                        "content": content,
+                        "sources": json.dumps(sources),
+                    },
+                )
+                return
+            except Exception:
+                pass
         conn.execute(
             text(
                 "INSERT INTO chat_messages (session_id, role, content) VALUES (:session_id, :role, :content)"
