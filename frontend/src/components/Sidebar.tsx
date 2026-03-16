@@ -1,5 +1,6 @@
 import { Trash2, Plus, MessageSquare, FolderOpen } from 'lucide-react'
 import { useState } from 'react'
+import toast from 'react-hot-toast'
 import type { ChatSession } from '../types'
 import { createChat, deleteChat } from '../api/client'
 
@@ -37,32 +38,34 @@ export function Sidebar({
 }: SidebarProps) {
   const [deletingId, setDeletingId] = useState<string | null>(null)
 
+  const handleDelete = async (e: React.MouseEvent, id: string) => {
+    e.stopPropagation()
+    if (deletingId === id) return // prevent double submit
+    setDeletingId(id)
+    try {
+      await deleteChat(id)
+      onSessionsChange()
+      if (activeId === id) onNewChat()
+      toast.success('Chat deleted')
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Failed to delete chat')
+    } finally {
+      setDeletingId(null)
+    }
+  }
+
   const handleNew = async () => {
     try {
       const chat = await createChat()
-      onSelect(chat.id)
       onSessionsChange()
+      onSelect(chat.id)
     } catch (e) {
       console.error(e)
     }
-    onNewChat()
   }
 
   const handleSelectChat = (id: string) => {
     onSelect(id)
-  }
-
-  const handleDelete = async (e: React.MouseEvent, id: string) => {
-    e.stopPropagation()
-    if (deletingId === id) {
-      await deleteChat(id)
-      onSessionsChange()
-      if (activeId === id) onNewChat()
-      setDeletingId(null)
-    } else {
-      setDeletingId(id)
-      setTimeout(() => setDeletingId(null), 2000)
-    }
   }
 
   if (collapsed) {
@@ -106,51 +109,13 @@ export function Sidebar({
 
   return (
     <aside className="w-[280px] flex flex-col bg-[#18181b] border-r border-white/5 shrink-0">
-      <button
-        type="button"
-        onClick={handleNew}
-        className="m-3 py-2.5 px-4 rounded-lg bg-indigo-500 hover:bg-indigo-600 text-white font-medium text-sm flex items-center justify-center gap-2"
-      >
-        <Plus className="w-4 h-4" />
-        New Chat
-      </button>
-      <div className="flex-1 overflow-y-auto px-2 pb-4 flex flex-col">
-        <div className="flex-1 min-h-0">
-          {sessions.map((s) => (
-            <div
-              key={s.id}
-              role="button"
-              tabIndex={0}
-              onClick={() => handleSelectChat(s.id)}
-              onKeyDown={(e) => e.key === 'Enter' && handleSelectChat(s.id)}
-              className={`group flex items-center gap-2 rounded-lg px-3 py-2.5 cursor-pointer border-l-2 transition-colors 150ms ${
-                activeId === s.id && currentView === 'chat'
-                  ? 'border-indigo-500 bg-[#1c1c21]'
-                  : 'border-transparent hover:bg-white/5'
-              }`}
-            >
-              <span className="flex-1 min-w-0 text-left text-sm text-[#fafafa] truncate" title={s.title}>
-                {s.title || 'New Chat'}
-              </span>
-              <span className="text-xs text-[#71717a] shrink-0">{formatTime(s.updated_at)}</span>
-              <button
-                type="button"
-                onClick={(e) => handleDelete(e, s.id)}
-                title={deletingId === s.id ? 'Click again to delete' : 'Delete'}
-                className={`p-1 rounded opacity-0 group-hover:opacity-100 hover:bg-red-500/20 text-[#a1a1aa] hover:text-red-400 shrink-0 ${
-                  deletingId === s.id ? 'opacity-100 ring-1 ring-red-500/50' : ''
-                }`}
-              >
-                <Trash2 className="w-4 h-4" />
-              </button>
-            </div>
-          ))}
-        </div>
+      {/* Sticky top: Documents then New Chat */}
+      <div className="shrink-0 flex flex-col gap-2 p-3 border-b border-white/5">
         {onNavigateToDocuments && (
           <button
             type="button"
             onClick={onNavigateToDocuments}
-            className={`mt-2 flex items-center gap-2 rounded-lg px-3 py-2.5 w-full text-sm border-l-2 transition-colors 150ms ${
+            className={`flex items-center gap-2 rounded-lg px-3 py-2.5 w-full text-sm border-l-2 transition-colors 150ms ${
               currentView === 'documents'
                 ? 'border-indigo-500 bg-[#1c1c21] text-[#fafafa]'
                 : 'border-transparent hover:bg-white/5 text-[#a1a1aa]'
@@ -160,6 +125,45 @@ export function Sidebar({
             Documents
           </button>
         )}
+        <button
+          type="button"
+          onClick={handleNew}
+          className="py-2.5 px-4 rounded-lg bg-indigo-500 hover:bg-indigo-600 text-white font-medium text-sm flex items-center justify-center gap-2"
+        >
+          <Plus className="w-4 h-4" />
+          New Chat
+        </button>
+      </div>
+      {/* Scrollable chat list */}
+      <div className="flex-1 min-h-0 overflow-y-auto px-2 py-3">
+        {sessions.map((s) => (
+          <div
+            key={s.id}
+            role="button"
+            tabIndex={0}
+            onClick={() => handleSelectChat(s.id)}
+            onKeyDown={(e) => e.key === 'Enter' && handleSelectChat(s.id)}
+            className={`group flex items-center gap-2 rounded-lg px-3 py-2.5 cursor-pointer border-l-2 transition-colors 150ms ${
+              activeId === s.id && currentView === 'chat'
+                ? 'border-indigo-500 bg-[#1c1c21]'
+                : 'border-transparent hover:bg-white/5'
+            }`}
+          >
+            <span className="flex-1 min-w-0 text-left text-sm text-[#fafafa] truncate" title={s.title}>
+              {s.title || 'New Chat'}
+            </span>
+            <span className="text-xs text-[#71717a] shrink-0">{formatTime(s.updated_at)}</span>
+            <button
+              type="button"
+              onClick={(e) => handleDelete(e, s.id)}
+              disabled={deletingId === s.id}
+              title="Delete chat"
+              className="p-1.5 rounded opacity-0 group-hover:opacity-100 hover:bg-red-500/20 text-[#a1a1aa] hover:text-red-400 shrink-0 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <Trash2 className="w-4 h-4" />
+            </button>
+          </div>
+        ))}
       </div>
     </aside>
   )

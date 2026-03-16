@@ -86,7 +86,7 @@ async def stream_chat_response(messages: list[BaseMessage]):
     yield "status", STATUS_LABELS["hybrid_retrieve"]
     state = _merge(state, hybrid_retrieve_node(state))
     yield "status", STATUS_LABELS["grade_documents"]
-    state = _merge(state, grade_documents_node(state))
+    state = _merge(state, grade_documents_node(state, llm))
 
     while True:
         graded = state.get("graded_docs") or []
@@ -98,7 +98,7 @@ async def stream_chat_response(messages: list[BaseMessage]):
         yield "status", STATUS_LABELS["retrieve_after_rewrite"]
         state = _merge(state, retrieve_with_query_variant_node(state))
         yield "status", STATUS_LABELS["grade_documents"]
-        state = _merge(state, grade_documents_node(state))
+        state = _merge(state, grade_documents_node(state, llm))
 
     # Generate (streaming)
     yield "status", STATUS_LABELS["generate"]

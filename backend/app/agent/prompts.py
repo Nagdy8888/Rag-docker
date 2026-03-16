@@ -11,6 +11,8 @@ If the answer is NOT in the context, reply with exactly: \
 "I can't respond — I don't have the answer in my documents." \
 Do not use general knowledge or make up an answer when the context does not contain it.
 
+Do NOT mention chunk numbers, excerpt numbers, or phrases like "the first chunk", "chunk 1", or "according to the first excerpt" in your answer. Answer in a natural way as if citing the document directly (e.g. "According to the document..." or "The document states...").
+
 Context:
 {context}"""
 

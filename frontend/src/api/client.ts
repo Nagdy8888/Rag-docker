@@ -136,6 +136,8 @@ export async function streamChat(
               } catch {
                 callbacks.onSources?.([])
               }
+            } else if (data.type === 'error') {
+              callbacks.onError(new Error(data.content || 'Server error'))
             } else if (data.type === 'done') callbacks.onDone()
           } catch {
             // skip invalid JSON

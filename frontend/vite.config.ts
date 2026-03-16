@@ -10,6 +10,7 @@ export default defineConfig({
       '/api': {
         target: 'http://localhost:8000',
         changeOrigin: true,
+        timeout: 300000, // 5 min for Phase 4 (many LLM calls: analyze, grade, generate, hallucination check)
       },
     },
   },

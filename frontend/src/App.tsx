@@ -24,9 +24,14 @@ export default function App() {
     loadSessions()
   }, [loadSessions])
 
+  // When sessions load: if current selection is missing (e.g. deleted), pick first; if none selected, auto-select first chat
   useEffect(() => {
-    if (activeId && !sessions.some((s) => s.id === activeId)) {
+    if (sessions.length === 0) return
+    const activeExists = activeId && sessions.some((s) => s.id === activeId)
+    if (activeId && !activeExists) {
       setActiveId(sessions[0]?.id ?? null)
+    } else if (!activeId) {
+      setActiveId(sessions[0].id)
     }
   }, [sessions, activeId])
 

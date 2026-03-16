@@ -68,13 +68,21 @@ def _message_from_row(row: dict) -> ChatMessageResponse:
         sources = []
     if not isinstance(sources, list):
         sources = []
+    safe_sources = []
+    for s in sources:
+        if isinstance(s, dict):
+            safe_sources.append({
+                "filename": s.get("filename", ""),
+                "chunk_index": s.get("chunk_index"),
+                "snippet": s.get("snippet"),
+            })
     return ChatMessageResponse(
         id=row["id"],
         session_id=row["session_id"],
         role=row["role"],
         content=row["content"] or "",
         created_at=row["created_at"],
-        sources=[{"filename": s.get("filename", ""), "chunk_index": s.get("chunk_index"), "snippet": s.get("snippet")} for s in sources],
+        sources=safe_sources,
     )
 
 
@@ -329,31 +337,50 @@ def chat_stream(body: ChatSendBody = Body(...)):
     async def event_generator():
         full_reply = []
         sources = []
+        message_saved = False
         try:
             async for event_type, event_content in stream_chat_response(history):
+                if event_type == "token":
+                    full_reply.append(event_content)
+                if event_type == "sources":
+                    if event_content:
+                        try:
+                            sources = json.loads(event_content)
+                        except Exception:
+                            sources = []
+                    # Save and set title before yielding "done" so frontend refetch sees the new title
+                    reply_text = "".join(full_reply)
+                    insert_message(session_id, "assistant", reply_text, sources=sources if sources else None)
+                    message_saved = True
+                    if is_new_session and reply_text:
+                        try:
+                            title = generate_title([HumanMessage(content=content), AIMessage(content=reply_text)])
+                            update_session_title(session_id, title)
+                        except Exception:
+                            pass
                 yield {
                     "event": "message",
                     "data": json.dumps({"type": event_type, "content": event_content}),
                 }
-                if event_type == "token":
-                    full_reply.append(event_content)
-                if event_type == "sources" and event_content:
-                    try:
-                        sources = json.loads(event_content)
-                    except Exception:
-                        sources = []
+        except Exception as e:
+            import logging
+            logging.getLogger(__name__).exception("Stream chat error: %s", e)
+            yield {
+                "event": "message",
+                "data": json.dumps({"type": "error", "content": str(e)}),
+            }
+            yield {"event": "message", "data": json.dumps({"type": "done", "content": ""})}
         finally:
-            reply_text = "".join(full_reply)
-            # Save assistant message (Phase 4: include sources if available)
-            insert_message(session_id, "assistant", reply_text, sources=sources if sources else None)
-            # Session updated_at is set by DB trigger on message insert
-            # Background: generate title for new sessions
-            if is_new_session and reply_text:
-                try:
-                    title = generate_title([HumanMessage(content=content), AIMessage(content=reply_text)])
-                    update_session_title(session_id, title)
-                except Exception:
-                    pass
+            if not message_saved:
+                reply_text = "".join(full_reply)
+                if reply_text:
+                    insert_message(session_id, "assistant", reply_text, sources=None)
+                    if is_new_session:
+                        try:
+                            title = generate_title([HumanMessage(content=content), AIMessage(content=reply_text)])
+                            update_session_title(session_id, title)
+                        except Exception:
+                            pass
 
     return EventSourceResponse(
         event_generator(),

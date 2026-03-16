@@ -22,22 +22,28 @@ export function ChatInterface({ sessionId, onSessionTitleChange }: ChatInterface
   const [streamingStatus, setStreamingStatus] = useState<string | null>(null)
   const [streamingSources, setStreamingSources] = useState<SourceRef[]>([])
   const [error, setError] = useState<string | null>(null)
+  const [sourcesOpen, setSourcesOpen] = useState<Record<string, boolean>>({})
   const bottomRef = useRef<HTMLDivElement>(null)
   const streamingSourcesRef = useRef<SourceRef[]>([])
 
   useEffect(() => {
     if (!sessionId) {
       setMessages([])
+      setError(null)
       return
     }
     setLoading(true)
     setError(null)
+    setMessages([])
     getChat(sessionId)
       .then((data) => {
         setMessages(data.messages || [])
         onSessionTitleChange?.()
       })
-      .catch((e) => setError(e.message))
+      .catch((e) => {
+        setError(e.message)
+        setMessages([])
+      })
       .finally(() => setLoading(false))
   }, [sessionId, onSessionTitleChange])
 
@@ -113,7 +119,6 @@ export function ChatInterface({ sessionId, onSessionTitleChange }: ChatInterface
     )
   }
 
-  const [sourcesOpen, setSourcesOpen] = useState<Record<string, boolean>>({})
   const showEmpty = !loading && messages.length === 0 && !streamingContent
   const displayMessages = streamingContent
     ? [

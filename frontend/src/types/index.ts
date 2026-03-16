@@ -20,7 +20,7 @@ export interface ChatMessage {
   sources?: SourceRef[]
 }
 
-export type SSEEventType = 'status' | 'token' | 'done' | 'sources'
+export type SSEEventType = 'status' | 'token' | 'done' | 'sources' | 'error'
 
 export interface SSEMessageEvent {
   type: SSEEventType
